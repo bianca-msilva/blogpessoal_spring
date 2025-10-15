@@ -19,19 +19,23 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.generation.blogpessoal.Repository.PostagemRepository;
+import com.generation.blogpessoal.Repository.TemasRepository;
 import com.generation.blogpessoal.model.Postagem;
 
 import jakarta.validation.Valid;
 
+// Indica que é a Controller de nossa API Rest
 @RestController
 @RequestMapping("/postagens")
-
 //Autorizar o backend (API) as requisições vindo de outros servidores
 @CrossOrigin(origins = "*", allowedHeaders = "*")  // Liberar solicitações de qualquer origem e liberar o cabeçalho também (token de segurança)
 public class PostagemController {
 	// Trazer a Repository aqui e seus métodos (que interagem com o DB), IOC (inversão de controles) - transferir a responsabilidade de criar a instância do Objeto e gerenciá-lo para o Spring
 	@Autowired
-	private PostagemRepository postagemRepository; 
+	private PostagemRepository postagemRepository;
+	
+	@Autowired
+	private TemasRepository temaRepository;
 	
 	// Resposta HTTP
 	//<Tipo que quero retornar<Tipo atual da lista>>
@@ -53,7 +57,6 @@ public class PostagemController {
 	}
 	
 	// Procurar postagem por título, implementando o método do repository
-		
 	@GetMapping("/titulo/{titulo}")
 	public ResponseEntity<List<Postagem>> getAllByTitulo(@PathVariable String titulo){
 		return ResponseEntity.ok(postagemRepository.findAllByTituloContainingIgnoreCase(titulo)); 
@@ -62,22 +65,42 @@ public class PostagemController {
 	
 	// Para ter resposta HTTP ResponseEntity (é uma classe natural?)
 	// ResquestBody É para pegar algo do corpo da requisição
-	
-	
 	@PostMapping
 	public ResponseEntity<Postagem> post(@Valid @RequestBody Postagem postagem){ // Pegar e aplicar as validações de Postagem
-		// Ter acesso ao Objeto de Postagem
-		postagem.setId(null);  // Pois será no DB a criação do ID
-		return ResponseEntity.status(HttpStatus.CREATED).body(postagemRepository.save(postagem));
+		
+		// Validação de tema antes de adicionar a postagem
+		if(temaRepository.existsById(postagem.getTema().getId())) {
+			// Ter acesso ao Objeto de Postagem
+			postagem.setId(null);  // Pois será no DB a criação do ID
+			return ResponseEntity.status(HttpStatus.CREATED).body(postagemRepository.save(postagem));  // Sempre será retornada, mesmo se a lista estiver vazia 
+		}
+		
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O Tema não existe", null);
 	}
 	
+	
+	// Precisa de duas validações
 	@PutMapping
 	public ResponseEntity<Postagem> put(@Valid @RequestBody Postagem postagem){ // Pegar e aplicar as validações de Postagem
-		// Checar se o post existe ou não
-		return postagemRepository.findById(postagem.getId())
-				.map(resposta -> ResponseEntity.status(HttpStatus.OK).body(postagemRepository.save(postagem)))
-				.orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+		
+		if(postagemRepository.existsById(postagem.getId())) {
+			
+			// Se a postagem existe, checa se o tema existe
+			if(temaRepository.existsById(postagem.getTema().getId())) {
+				
+				return ResponseEntity.status(HttpStatus.OK).body(postagemRepository.save(postagem));  // Sempre será retornada, mesmo se a lista estiver vazia 
+			}
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O Tema não existe", null);
+		}
+		
+		return ResponseEntity.notFound().build();
+		
+		// Checar se o post existe ou não		
+//		return postagemRepository.findById(postagem.getId())
+//				.map(resposta -> ResponseEntity.status(HttpStatus.OK).body(postagemRepository.save(postagem)))
+//				.orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 	}
+	
 	
 	// void pois não tem retorno, o retorno é apenas para o usuário
 	@ResponseStatus(HttpStatus.NO_CONTENT)  // retorno caso der certo
