@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.generation.blogpessoal.Repository.TemasRepository;
 import com.generation.blogpessoal.model.Temas;
+import com.generation.blogpessoal.repository.TemasRepository;
 
 import jakarta.validation.Valid;
 
