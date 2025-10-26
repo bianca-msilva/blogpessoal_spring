@@ -36,19 +36,19 @@ public class UsuarioService {
 	private PasswordEncoder passwordEncoder;
 	
 	// Métodos CRUD
-	public List<Usuario> getAll(){
+	public List<Usuario> getAll() {
 		return usuarioRepository.findAll();
 	}
 	
-	public Optional<Usuario> getById(Long id){
+	public Optional<Usuario> getById(Long id) {
 		return usuarioRepository.findById(id);
 	}
 	
 	// Verificar se o usuário já tem cadastro, senão a security não saberá qual usuário autenticará
 	public Optional<Usuario> cadastrarUsuario(Usuario usuario){
 		
-		if(usuarioRepository.findByUsuario(usuario.getUsuario()).isPresent()) {
-			return Optional.empty(); // Indica para a controladora que não conseguiu criar o usuário pois ele já existe
+		if (usuarioRepository.findByUsuario(usuario.getUsuario()).isPresent()) {
+			return Optional.empty();
 		}
 		
 		// Atualizar com a senha criptografada
@@ -64,18 +64,18 @@ public class UsuarioService {
 	public Optional<Usuario> atualizarUsuario(Usuario usuario){
 		
 		// Atualizar checando o usuário e ID
-		if(!usuarioRepository.findById(usuario.getId()).isPresent()) {
+		if (!usuarioRepository.findById(usuario.getId()).isPresent()) {
 			return Optional.empty(); // Indica para a controladora que não conseguiu criar o usuário pois ele já existe
 		}
 		
 		Optional<Usuario> usuarioExistente = usuarioRepository.findByUsuario(usuario.getUsuario());
 		
-		if(usuarioExistente.isPresent() && !usuarioExistente.get().getId().equals(usuario.getId())) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário já existe", null);
+		if (usuarioExistente.isPresent() && !usuarioExistente.get().getId().equals(usuario.getId())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário já existe!", null);
 		}
 		
 		usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
-		
+		 
 		return Optional.of(usuarioRepository.save(usuario));
 		
 	}
@@ -90,10 +90,10 @@ public class UsuarioService {
 		UsuarioLogin login = usuarioLogin.get();
 		
 		try {
-			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login.getUsuario(), login.getSenha()));
+			authenticationManager.authenticate(
+					new UsernamePasswordAuthenticationToken(login.getUsuario(), login.getSenha()));
 			return usuarioRepository.findByUsuario(login.getUsuario())
 					.map(usuario -> construirRespostaLogin(login, usuario));
-			
 		}catch(Exception e) {
 			return Optional.empty();
 		}
@@ -101,18 +101,16 @@ public class UsuarioService {
 	}
 	
 	private UsuarioLogin construirRespostaLogin(UsuarioLogin usuarioLogin, Usuario usuario) {
-		
-		usuarioLogin.setId(usuario.getId());
-		usuarioLogin.setNome(usuario.getNome());
-		usuarioLogin.setFoto(usuario.getFoto());
-		usuarioLogin.setSenha("");
-		usuarioLogin.setToken(gerarToken(usuario.getUsuario()));
-		return usuarioLogin;
-		
-	}
+		 usuarioLogin.setId(usuario.getId());
+		 usuarioLogin.setNome(usuario.getNome());
+		 usuarioLogin.setFoto(usuario.getFoto());
+		 usuarioLogin.setSenha("");
+		 usuarioLogin.setToken(gerarToken(usuario.getUsuario()));
+		 return usuarioLogin;
+	 }
 	
-	private String gerarToken(String usuario) {
-		return "Bearer " + jwtService.generateToken(usuario);
-	}
+	 private String gerarToken(String usuario) {
+		 return "Bearer " + jwtService.generateToken(usuario);
+	 }
 
 }
