@@ -17,7 +17,7 @@ import com.generation.blogpessoal.repository.UsuarioRepository;
 import com.generation.blogpessoal.security.JwtService;
 
 
-// Realiza todo o processamento, com base em regras especificadas
+// Realiza todo o processamento, com base em regras especificadas (regras de negócio)
 @Service
 public class UsuarioService {
 	
