@@ -131,6 +131,7 @@ public class UsuarioControllerTest {
 	void deveListarTodosUsuarios() {
 		
 		// Given
+		// Não precisa salvar o usuário numa variável pois ela não será utilizada posteriormente
 		usuarioService.cadastrarUsuario(TestBuilder.criarUsuario(null, "Maria", "maria@email.com.br","maria789"));
 		usuarioService.cadastrarUsuario(TestBuilder.criarUsuario(null, "Joao", "jao@email.com.br","jao98745"));
 		
